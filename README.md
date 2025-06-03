@@ -3,9 +3,9 @@
 from google.colab import drive
 drive.mount('/content/drive')
 
-# ==============================================
+
 # 1. 라이브러리 로딩 및 환경 정보
-# ==============================================
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -37,9 +37,9 @@ X_test = test.drop(columns=["ID"])
 
 
 
-# ==============================================
+
 # 3. 전처리: 범주형 인코딩
-# ==============================================
+
 categorical_cols = X.select_dtypes(include='object').columns
 encoders = {}
 for col in categorical_cols:
@@ -53,9 +53,9 @@ for col in categorical_cols:
     le.classes_ = np.append(le.classes_, '<UNK>')
     X_test[col] = le.transform(X_test[col])
 
-# ==============================================
+
 # 4. 중요도 시각화 전용 모델 학습
-# ==============================================
+
 
 # 전처리 완료된 전체 X, y 사용
 X_train_f, X_val_f, y_train_f, y_val_f = train_test_split(X, y, test_size=0.2, stratify=y, random_state=42)
@@ -66,9 +66,9 @@ model_full = XGBClassifier(random_state=42, eval_metric='logloss')
 model_full.fit(X_train_res_f, y_train_res_f)
 _= model_full
 
-# ==============================================
+
 # 5. Feature Importance 시각화 (전체 feature 기준)
-# ==============================================
+
 importances = model_full.feature_importances_
 features = X_train_res_f.columns.tolist()
 
@@ -88,16 +88,16 @@ plt.show()
 
 
 
-# ==============================================
+
 # 6. 중요도 낮은 feature 제거 후 재정의
-# ==============================================
+
 drop_features = ["T3_Result", "Nodule_Size", "Age", "T4_Result", "TSH_Result"]
 X = X.drop(columns=drop_features)
 X_test_dropped = X_test.drop(columns=drop_features)  # drop된 X_test는 따로 저장
 
-# ==============================================
+
 # 7. 모델 학습 (앙상블: XGB + LGBM + CatBoost)
-# ==============================================
+
 X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, stratify=y, random_state=42)
 smote = SMOTE(random_state=42)
 X_train_res, y_train_res = smote.fit_resample(X_train, y_train)
@@ -112,9 +112,9 @@ cat.fit(X_train_res, y_train_res)
 
 
 
-# ==============================================
+
 # 8. Threshold 최적화
-# ==============================================
+
 xgb_val = xgb.predict_proba(X_val)[:, 1]
 lgbm_val = lgbm.predict_proba(X_val)[:, 1]
 cat_val = cat.predict_proba(X_val)[:, 1]
@@ -135,9 +135,9 @@ best_threshold = thresholds[best_idx]
 print(f"Best Threshold: {best_threshold:.4f}, Best F1 Score: {f1s[best_idx]:.4f}")
 
 
-# ==============================================
+
 # 9. 테스트셋 예측 및 제출 저장
-# ==============================================
+
 xgb_test = xgb.predict_proba(X_test_dropped)[:, 1]
 lgbm_test = lgbm.predict_proba(X_test_dropped)[:, 1]
 cat_test = cat.predict_proba(X_test_dropped)[:, 1]
